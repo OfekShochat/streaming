@@ -1,6 +1,6 @@
 import zlib
 from time import time
-import json
+from json import dumps
 import struct
 import base64
 from numpy import array
@@ -24,6 +24,15 @@ class StreamEntry:
     return l
 
   def imageToCompressedVector(self, image) -> bytes:
+    """
+    image to compressed and flattened format
+
+    Args:
+      image (list): image as a list of floats
+
+    Returns:
+      bytes: compressed bytes
+    """
     FlattenedImage = self._flatten(image)
     buf = struct.pack('%sf' % len(FlattenedImage), *FlattenedImage)
     return base64.b64encode(self.compressionFunc(buf)).decode('ascii')
@@ -40,10 +49,25 @@ class StreamEntry:
     }
     self.compressionFunc = compressionFunctions[CompressionName]
   
-  def setttd(self, ttd: int) -> void:
+  def setttd(self, ttd: float) -> void:
+    """
+    set time until dead
+
+    Args:
+      ttd (float): time until dead in seconds
+    """
     self._ttd = ttd
   
-  def create(self, data) -> dict:
+  def create(self, data) -> str:
+    """
+    convert entry data to json format
+
+    Args:
+      data (list): data, here it's an image to stream.
+
+    Returns:
+      str: entry data in json format
+    """
     import base64
     entry = {}
     entry.update({"data":self.imageToCompressedVector(data)}) # compressed data
