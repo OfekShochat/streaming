@@ -49,7 +49,7 @@ class StreamEntry:
     entry.update({"data":self.imageToCompressedVector(data)}) # compressed data
     entry.update({"timestamp":time()}) # time stamp
     entry.update({"ttd":self._ttd}) # time until dead
-    entry.update({"shape":array(data).shape})
+    entry.update({"shape":array(data).shape}) # shape - used to reconstruct video client side
     return json.dumps(entry)
 
 def random_image(x, y):
