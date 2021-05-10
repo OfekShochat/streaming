@@ -1,4 +1,24 @@
-queueEntry:
-  submitted time
-  tts
-  compressed-data
+Declarations:
+  ->-> sends to
+  <-<- reads/gets
+  ?    if
+  ?!   else
+  :    then
+  ->   to
+  ()   local expression
+  ;    end of expression
+  /    of
+
+QueueEntry:
+  submittedTime
+  ttd              time to dead
+  ttmi             time to not important
+  compressedData
+
+PLAN / serverWorker::mainLoop:
+            QueueEntry
+  streamer    ->->     queue(name=streamerApiKey); serverWorker <-<- queue(name=streamerApiKey).latest;
+                                                                                                                         ack
+  ? !(time() - queue(name=streamerApiKey).latest.submittedTime > queue(name=streamerApiKey).latest.ttmi) : (serverWorker ->-> masterServer;) (return -> serverWorker::mainLoop;)
+
+  !? : publish -> queue(name=streamerApiKey);

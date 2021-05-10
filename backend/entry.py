@@ -8,10 +8,12 @@ from numpy import array
 void = None
 
 class StreamEntry:
-  def __init__(self, compressionFunc, ttd, image):
+  def __init__(self, compressionFunc, ttd, ttmi, image):
     self.setCompressionFunc(compressionFunc)
     self._ttd = ttd
+    self._ttmi = ttmi
     self.output = self.create(image)
+    return self.output
   
   def _flatten(self, container):
     l = []
@@ -33,9 +35,9 @@ class StreamEntry:
     Returns:
       bytes: compressed bytes
     """
-    FlattenedImage = self._flatten(image)
-    buf = struct.pack('%sf' % len(FlattenedImage), *FlattenedImage)
-    return base64.b64encode(self.compressionFunc(buf)).decode('ascii')
+    import sys
+    buf = struct.pack('%sf' % len(image), *image)
+    return base64.b64encode(self.compressionFunc(buf, level = 1)).decode('ascii')
 
   def setCompressionFunc(self, compressionFunc):
     if isinstance(compressionFunc, str):
@@ -74,7 +76,7 @@ class StreamEntry:
     entry.update({"timestamp":time()}) # time stamp
     entry.update({"ttd":self._ttd}) # time until dead
     entry.update({"shape":array(data).shape}) # shape - used to reconstruct video client side
-    return json.dumps(entry)
+    return dumps(entry)
 
 def random_image(x, y):
   import random
@@ -87,6 +89,20 @@ def random_image(x, y):
   return d
 
 if __name__ == "__main__":
-  d = random_image(3, 5)
-  eg = StreamEntry("zlib", 2, d)
-  print(eg.output)
+  times = 20
+  import cv2
+  cap = cv2.VideoCapture(0)
+  
+  import sys
+  frames = []
+  print("taking frames")
+  for i in range(times):
+    ret, frame = cap.read()
+    frames.append(frame)
+  print("starting entries")
+  st = time()
+  for i in range(times):
+    eg = StreamEntry("zlib", 2, 300, frames[i].flatten())
+    if i % 10 == 0:
+      print(sys.getsizeof(eg.output)/1000000)
+  print(times/(time() - st))
